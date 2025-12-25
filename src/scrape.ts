@@ -12,7 +12,9 @@ const parseNumber = (input: string | undefined): number =>
 const parseJoinDate = (input: string | undefined): Date =>
 	input ? new Date(input.replace(/^Joined\s+/i, "")) : new Date(1984, 3, 4);
 
-async function fetchTwitterProfile(url: string): Promise<TwitterProfile> {
+export async function fetchTwitterProfile(
+	url: string,
+): Promise<TwitterProfile> {
 	try {
 		const response = await fetch(url);
 		if (!response.ok) {
@@ -27,7 +29,7 @@ async function fetchTwitterProfile(url: string): Promise<TwitterProfile> {
 	}
 }
 
-function parseScrapedTwitterProfile(
+export function parseScrapedTwitterProfile(
 	data: string,
 ): TwitterProfile {
 	try {
