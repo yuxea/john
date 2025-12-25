@@ -1,0 +1,24 @@
+{
+	"manifest_version": 3,
+	"name": "john",
+	"version": "0.1.0",
+	"description": "A browser extension that bridges your Twitter timeline to Bluesky",
+	"icons": {
+		"48": "assets/john-48.png"
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"*://(b|witch)sky.app/*",
+				"*://(catsky|deer).social/*",
+				"*://blacksky.community/*"
+			],
+			"js": ["content.js"]
+		}
+	],
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "@johnsky"
+		}
+	}
+}
