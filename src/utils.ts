@@ -19,7 +19,7 @@ export function extractIdentifiersFromPartialUser(title: string):
 
 	const separator = title.lastIndexOf("/");
 	if (separator === -1) {
-		return { username: title.trim(), displayName: title.trim() };
+		return { username: "@" + title.trim(), displayName: title.trim() };
 	}
 
 	const displayName = title.substring(0, separator).trim(),
