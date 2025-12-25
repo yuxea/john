@@ -14,17 +14,23 @@ export interface TwitterFeed {
 
 function extractMediaUrls(content: string): string[] {
 	const mediaUrls: string[] = [];
+	const parser = new DOMParser();
+	const doc = parser.parseFromString(content, "text/html");
 
-	const imgRegex = /<img[^>]+src="([^"]+)"/g;
-	let match;
-	while ((match = imgRegex.exec(content)) !== null) {
-		mediaUrls.push(match[1]);
-	}
+	if (!doc) return mediaUrls;
 
-	const videoRegex = /<a[^>]+href="([^"]+)"[^>]*>\s*<br>Video<br>/g;
-	while ((match = videoRegex.exec(content)) !== null) {
-		mediaUrls.push(match[1]);
-	}
+	doc.querySelectorAll("img").forEach((img) => {
+		const src = img.getAttribute("src");
+		if (src) mediaUrls.push(src);
+	});
+
+	doc.querySelectorAll("a").forEach((link) => {
+		const href = link.getAttribute("href");
+		const text = link.textContent?.trim();
+		if (href && text === "Video") {
+			mediaUrls.push(href);
+		}
+	});
 
 	return mediaUrls;
 }
@@ -41,49 +47,68 @@ const normalize = (input: string): string =>
 		.replace(/\n\s*\n/g, "\n")
 		.trim();
 
-export async function fetchFeed(url: string): Promise<TwitterFeed | null> {
-	const response = await fetch(url);
-	if (!response.ok) {
-		throw new Error(
-			`failed to fetch rss feed: ${response.status} ${response.statusText}`,
+export async function parseTwitterFeed(
+	data: string,
+): Promise<TwitterFeed> {
+	try {
+		const feed = await parseFeed(data);
+		if (!feed) {
+			throw new Error("failed to parse RSS feed");
+		}
+
+		const { username, displayName } = extractIdentifiersFromPartialUser(
+			feed.title.value ?? "Unknown",
 		);
+
+		const partialProfile: TwitterPartialProfile = {
+			username,
+			displayName,
+			avatarPath: feed.image?.url,
+		};
+
+		const tweets: Tweet[] = feed.entries
+			.map((tweet) => {
+				const author = tweet.author?.name ?? tweet["dc:creator"]?.[0];
+				if (!author) return null;
+
+				const isRetweet = author !== partialProfile.username;
+				const published = tweet.published ?? tweet.updated ??
+					new Date(1984, 3, 4);
+				const content = tweet.description?.value ?? tweet.title?.value ?? "";
+
+				return {
+					retweet: isRetweet ? { author } : undefined,
+					id: String(tweet.id),
+					author: partialProfile.username,
+					content: normalize(content),
+					date: published,
+					media: extractMediaUrls(content) || undefined,
+				};
+			})
+			.filter((tweet) => tweet !== null);
+
+		return { partialProfile, tweets };
+	} catch (e) {
+		console.error("error parsing feed:", e);
+		throw e;
 	}
+}
 
-	const xml = await response.text();
-	const feed = await parseFeed(xml);
-	if (!feed) {
-		throw new Error("failed to parse RSS feed");
+export async function fetchTwitterFeed(
+	url: string,
+): Promise<TwitterFeed> {
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(
+				`failed to fetch rss feed: ${response.status} ${response.statusText}`,
+			);
+		}
+
+		const html = await response.text();
+		return parseTwitterFeed(html);
+	} catch (e) {
+		console.error("error fetching feed:", e);
+		throw e;
 	}
-
-	const { username, displayName } = extractIdentifiersFromPartialUser(
-		feed.title.value ?? "Unknown",
-	);
-
-	const partialProfile: TwitterPartialProfile = {
-		username,
-		displayName,
-		avatarPath: feed.image?.url,
-	};
-	const tweets: Tweet[] = [];
-
-	for (const tweet of feed.entries) {
-		const author = tweet.author?.name ?? tweet["dc:creator"]?.[0];
-		if (!author) continue;
-
-		const isRetweet = author !== partialProfile.username;
-		const published = tweet.published ?? tweet.updated ??
-			new Date(4, 3, 1984);
-		const content = tweet.description?.value ?? tweet.title?.value ?? "";
-
-		tweets.push({
-			retweet: isRetweet ? { author: author } : undefined,
-			id: String(tweet.id),
-			author: partialProfile.username,
-			content: normalize(content),
-			date: published,
-			media: extractMediaUrls(content) || undefined,
-		});
-	}
-
-	return { partialProfile, tweets };
 }
