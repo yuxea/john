@@ -1,0 +1,33 @@
+name: test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v6
+      - name: setup deno
+        uses: denoland/setup-deno@v2
+      - name: cache deno dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.deno
+            ~/.cache/deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('deno.json', 'deno.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+      - name: verify formatting
+        run: deno fmt --check
+      - name: run linter
+        run: deno lint src
+      - name: run tests
+        run: deno test --allow-net --allow-read --allow-env
+      - name: type check
+        run: deno check src/**/*.ts src/**/*.tsx
