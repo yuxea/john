@@ -4,6 +4,7 @@
  */
 
 import { parseFeed } from "@mikaelporttila/rss";
+import { DOMParser } from "@b-fuze/deno-dom";
 import { Tweet, TwitterPartialProfile } from "./types.ts";
 import { extractIdentifiersFromPartialUser } from "./utils.ts";
 
