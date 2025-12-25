@@ -16,8 +16,18 @@ async function build() {
 
 	const entrypoints = [
 		{ input: "src/background.ts", output: "background.js" },
+		{ input: "src/content.ts", output: "content.js" },
 		{ input: "src/popup.tsx", output: "popup.js" },
 	];
+
+	await Deno.bundle({
+		entrypoints: ["npm:webextension-polyfill"],
+		outputPath: join(outDir, "browser-polyfill.js"),
+		minify: !isDev,
+		format: "esm",
+		platform: "browser",
+		write: true,
+	});
 
 	for (const entry of entrypoints) {
 		await Deno.bundle({
@@ -28,6 +38,9 @@ async function build() {
 			format: "esm",
 			platform: "browser",
 			write: true,
+			external: [
+				"webextension-polyfill",
+			],
 		});
 	}
 

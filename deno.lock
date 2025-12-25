@@ -13,7 +13,9 @@
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
-    "npm:preact@^10.28.1": "10.28.1"
+    "npm:preact@^10.28.1": "10.28.1",
+    "npm:webextension-polyfill@*": "0.12.0",
+    "npm:webextension-polyfill@0.12": "0.12.0"
   },
   "jsr": {
     "@b-fuze/deno-dom@0.1.56": {
@@ -72,6 +74,9 @@
   "npm": {
     "preact@10.28.1": {
       "integrity": "sha512-u1/ixq/lVQI0CakKNvLDEcW5zfCjUQfZdK9qqWuIJtsezuyG6pk9TWj75GMuI/EzRSZB/VAE43sNWWZfiy8psw=="
+    },
+    "webextension-polyfill@0.12.0": {
+      "integrity": "sha512-97TBmpoWJEE+3nFBQ4VocyCdLKfw54rFaJ6EVQYLBCXqCIpLSZkwGgASpv4oPt9gdKCJ80RJlcmNzNn008Ag6Q=="
     }
   },
   "redirects": {
@@ -113,7 +118,8 @@
       "jsr:@std/assert@^1.0.16",
       "jsr:@std/fs@^1.0.21",
       "jsr:@std/path@^1.1.4",
-      "npm:preact@^10.28.1"
+      "npm:preact@^10.28.1",
+      "npm:webextension-polyfill@0.12"
     ]
   }
 }

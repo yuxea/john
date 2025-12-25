@@ -6,6 +6,12 @@
 	"icons": {
 		"48": "assets/john-48.png"
 	},
+	"permissions": [
+		"storage"
+	],
+	"optional_host_permissions": [
+		"*://*/*"
+	],
 	"content_scripts": [
 		{
 			"matches": [
@@ -13,9 +19,20 @@
 				"*://(catsky|deer).social/*",
 				"*://blacksky.community/*"
 			],
-			"js": ["content.js"]
+			"js": ["browser-polyfill.js", "content.js"],
+			"css": ["content.css"]
 		}
 	],
+	"background": {
+		"service_worker": "background.js",
+		"type": "module"
+	},
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": {
+			"48": "assets/john-48.png"
+		}
+	},
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "@johnsky"
