@@ -83,22 +83,32 @@ async function build() {
 	});
 
 	for (const entry of entrypoints) {
-		console.log(
-			entry.input,
-			await Deno.bundle({
-				entrypoints: [entry.input],
-				outputPath: join(outDir, entry.output),
-				minify: !flags.dev,
-				sourcemap: flags.dev ? "inline" : "linked",
-				format: "esm",
-				platform: "browser",
-				write: true,
-				external: [
-					"webextension-polyfill",
-				],
-			}),
-		);
+		await Deno.bundle({
+			entrypoints: [entry.input],
+			outputPath: join(outDir, entry.output),
+			minify: !flags.dev,
+			sourcemap: flags.dev ? "inline" : "linked",
+			format: "esm",
+			platform: "browser",
+			write: true,
+			external: [
+				"webextension-polyfill",
+			],
+		});
 	}
+
+	await Deno.bundle({
+		entrypoints: ["src/patches.ts"],
+		outputPath: join(outDir, "patches.js"),
+		minify: !flags.dev,
+		sourcemap: flags.dev ? "inline" : "linked",
+		format: "iife",
+		platform: "browser",
+		write: true,
+		external: [
+			"webextension-polyfill",
+		],
+	});
 
 	Deno.writeTextFileSync(
 		`${outDir}/manifest.json`,

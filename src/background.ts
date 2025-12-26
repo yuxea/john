@@ -7,7 +7,7 @@ import { refreshAllFeeds } from "./api.ts";
 import { scheduleRefresh, setupMessageListener } from "./messaging.ts";
 import { initializeStorage } from "./storage.ts";
 
-console.log("john background script loaded");
+console.log("[john] background script loaded");
 
 browser.runtime.onInstalled.addListener(async () => {
 	await initializeStorage();

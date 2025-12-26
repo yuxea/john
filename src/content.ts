@@ -4,3 +4,10 @@
  */
 
 console.log("[john] content script loaded");
+
+const script = document.createElement("script");
+script.src = browser.runtime.getURL("patches.js");
+script.onload = function () {
+	(this as typeof script).remove();
+};
+(document.head || document.documentElement).appendChild(script);
