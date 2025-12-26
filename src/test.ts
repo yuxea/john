@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertStringIncludes } from "@std/assert";
 import { extractIdentifiersFromPartialUser } from "./utils.ts";
 
 import sample from "./test.sample.json" with { type: "json" };
@@ -74,7 +74,7 @@ Deno.test("parseTwitterFeed - identifies original tweets", async () => {
 	);
 	assertExists(originalTweet);
 	assertEquals(originalTweet.retweet, undefined);
-	assertEquals(originalTweet.author, "@elonmusk");
+	assertEquals(originalTweet.author.username, "@elonmusk");
 });
 
 Deno.test("parseTwitterFeed - extracts media urls", async () => {
@@ -126,4 +126,41 @@ Deno.test("parseScrapedTwitterProfile - parses join date", () => {
 	assertExists(result.joinDate);
 	assertEquals(result.joinDate instanceof Date, true);
 	assertEquals(result.joinDate.getFullYear(), 2009);
+});
+
+Deno.test("parseTwitterFeed - handles complex blockquote with links", async () => {
+	const result = await parseTwitterFeed(twitterFeed);
+
+	const tweet = result.tweets.find((t) => t.id === "2004190405022064720");
+	assertExists(tweet, "tweet with id 2004190405022064720 should exist");
+
+	assertStringIncludes(
+		tweet.content,
+		"GROK STAYS AHEAD OF THE CURVE: ACING ALL TESTS KNOWN TO MAN",
+		"should include the main content",
+	);
+
+	assertStringIncludes(
+		tweet.content,
+		"Source: @xAI, @TechCrunch",
+		"should include the source from the quoted content",
+	);
+
+	assertStringIncludes(
+		tweet.content,
+		"It's not just the smartest LLM",
+		"html entities should be decoded",
+	);
+
+	assertStringIncludes(
+		tweet.child!.content,
+		"Try the @Grok app!",
+		"nested quote should be included",
+	);
+
+	assertStringIncludes(
+		tweet.child!.content,
+		"apps.apple.com/us/app/grok/i",
+		"links should be preserved",
+	);
 });

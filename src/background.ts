@@ -5,6 +5,13 @@
 import { DEFAULT_SETTINGS } from "./constants.ts";
 import { ExtensionSettings } from "./types.ts";
 
+class JohnError extends Error {
+	constructor(message: string, public code: string) {
+		super(message);
+		this.name = "JohnError";
+	}
+}
+
 browser.runtime.onInstalled.addListener(async () => {
 	const { settings } = await browser.storage.sync.get("settings");
 	if (!settings) {
@@ -23,7 +30,7 @@ type RuntimeMessageProtocol =
 
 type RuntimeResponse =
 	| ExtensionSettings
-	| { success: true };
+	| { success: boolean; error?: string };
 
 function isRuntimeMessage(value: unknown): value is RuntimeMessageProtocol {
 	if (typeof value !== "object" || value === null) return false;
@@ -44,17 +51,28 @@ function isRuntimeMessage(value: unknown): value is RuntimeMessageProtocol {
 
 browser.runtime.onMessage.addListener(
 	async (message: unknown): Promise<RuntimeResponse | void> => {
-		if (!isRuntimeMessage(message)) {
-			return;
-		}
+		try {
+			if (!isRuntimeMessage(message)) {
+				throw new JohnError("invalid message format", "INVALID_MESSAGE");
+			}
 
-		switch (message.type) {
-			case "GET_SETTINGS":
-				return await getSettings();
+			switch (message.type) {
+				case "GET_SETTINGS":
+					return await getSettings();
 
-			case "UPDATE_SETTINGS":
-				await browser.storage.sync.set({ settings: message.settings });
-				return { success: true };
+				case "UPDATE_SETTINGS":
+					if (!message.settings || typeof message.settings !== "object") {
+						throw new JohnError("invalid settings object", "INVALID_SETTINGS");
+					}
+					await browser.storage.sync.set({ settings: message.settings });
+					return { success: true };
+			}
+		} catch (error) {
+			console.error("background script error", error);
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : "unknown error",
+			};
 		}
 	},
 );

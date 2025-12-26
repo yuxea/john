@@ -33,11 +33,12 @@ export type Optional<T, K extends keyof T> =
 
 export interface Tweet {
 	id: string;
-	author: string;
+	author: TwitterPartialProfile;
 	content: string;
 	date: Date;
 	retweet?: {
 		author: string;
 	};
+	child?: Omit<Tweet, "date">;
 	media?: string[];
 }

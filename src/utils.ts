@@ -30,3 +30,27 @@ export function extractIdentifiersFromPartialUser(title: string):
 		username: username || "@unknown",
 	};
 }
+
+export function extractIdentifiersFromQuotedUser(title: string):
+	& Field<"username">
+	& Field<"displayName"> {
+	if (!title || title.trim() === "") {
+		return { username: "@unknown", displayName: "Unknown" };
+	}
+
+	const separator = title.lastIndexOf("(");
+	if (separator === -1) {
+		return { username: "@" + title.trim(), displayName: title.trim() };
+	}
+
+	const displayName = title.substring(0, separator).trim(),
+		usernameWithParen = title.substring(separator).trim();
+
+	const usernameMatch = usernameWithParen.match(/^\(@(.+)\)$/);
+	const username = usernameMatch ? "@" + usernameMatch[1] : usernameWithParen;
+
+	return {
+		displayName: displayName || "Unknown",
+		username: username || "@unknown",
+	};
+}

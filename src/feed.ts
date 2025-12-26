@@ -3,50 +3,133 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { parseFeed } from "@mikaelporttila/rss";
-import { DOMParser } from "@b-fuze/deno-dom";
+import { FeedEntry, parseFeed } from "@mikaelporttila/rss";
+import { DOMParser, Element } from "@b-fuze/deno-dom";
 import { Tweet, TwitterPartialProfile } from "./types.ts";
-import { extractIdentifiersFromPartialUser } from "./utils.ts";
+import {
+	extractIdentifiersFromPartialUser,
+	extractIdentifiersFromQuotedUser,
+} from "./utils.ts";
 
 export interface TwitterFeed {
 	partialProfile: TwitterPartialProfile;
 	tweets: Tweet[];
 }
 
-function extractMediaUrls(content: string): string[] {
+function extractMediaUrls(element: Element): string[] {
 	const mediaUrls: string[] = [];
-	const parser = new DOMParser();
-	const doc = parser.parseFromString(content, "text/html");
 
-	if (!doc) return mediaUrls;
-
-	doc.querySelectorAll("img").forEach((img) => {
+	element.querySelectorAll("img").forEach((img) => {
 		const src = img.getAttribute("src");
 		if (src) mediaUrls.push(src);
+		img.remove();
 	});
 
-	doc.querySelectorAll("a").forEach((link) => {
+	element.querySelectorAll("a").forEach((link) => {
 		const href = link.getAttribute("href");
 		const text = link.textContent?.trim();
 		if (href && text === "Video") {
 			mediaUrls.push(href);
+			link.remove();
 		}
 	});
 
 	return mediaUrls;
 }
 
-const normalize = (input: string): string =>
-	input.replace(/<br\s*\/?>/gi, "\n")
-		.replace(/<\/p>/gi, "\n")
-		.replace(/<[^>]*>/g, "")
-		.replace(/&apos;/g, "'")
-		.replace(/&quot;/g, '"')
-		.replace(/&amp;/g, "&")
-		.replace(/&lt;/g, "<")
-		.replace(/&gt;/g, ">")
-		.replace(/\n\s*\n/g, "\n")
-		.trim();
+function parseContent(
+	input: string,
+): {
+	content: string;
+	mediaUrls: string[];
+	child?: Tweet["child"];
+} {
+	const parser = new DOMParser();
+	const doc = parser.parseFromString(input, "text/html");
+
+	if (!doc) return { content: input, mediaUrls: [] };
+	const mediaUrls = extractMediaUrls(doc.body);
+
+	const blockquote = doc.querySelector("blockquote");
+	let child: ReturnType<typeof parseQuoted>;
+
+	if (blockquote) {
+		doc.querySelector("hr")?.remove();
+		child = parseQuoted(blockquote);
+		blockquote.remove();
+	}
+
+	return {
+		content: doc.body?.textContent.trim() || "",
+		mediaUrls,
+		child,
+	};
+}
+
+function parseQuoted(blockquote: Element): Tweet["child"] | undefined {
+	if (!blockquote) return;
+
+	const identityElement = blockquote.querySelector("b");
+	const { username, displayName } = extractIdentifiersFromQuotedUser(
+		identityElement?.textContent ?? "Unknown",
+	);
+	identityElement?.remove();
+
+	const partialProfile: TwitterPartialProfile = {
+		username,
+		displayName,
+	};
+
+	let id: string | undefined;
+	for (const link of blockquote.querySelectorAll("a")) {
+		const text = link?.getAttribute("href");
+		if (!text) continue;
+
+		const url = new URL(text),
+			match = url.pathname.match(/\/status\/(\d+)/);
+
+		if (match) {
+			id = match[1];
+			link.remove();
+			break;
+		}
+	}
+
+	const mediaUrls = extractMediaUrls(blockquote);
+	blockquote.querySelector("footer")?.remove();
+
+	return {
+		content: blockquote.textContent.trim() || "",
+		author: partialProfile,
+		media: mediaUrls,
+		id: id || "unknown",
+	};
+}
+
+function parseTweetEntry(
+	partialProfile: TwitterPartialProfile,
+	tweet: FeedEntry,
+) {
+	const author = tweet.author?.name ?? tweet["dc:creator"]?.[0];
+	if (!author) return null;
+
+	const isRetweet = author !== partialProfile.username;
+	const published = tweet.published ?? tweet.updated ??
+		new Date(1984, 3, 4);
+	const { content, mediaUrls, child } = parseContent(
+		tweet.description?.value ?? tweet.title?.value ?? "",
+	);
+
+	return {
+		retweet: isRetweet ? { author } : undefined,
+		id: String(tweet.id),
+		author: partialProfile,
+		content,
+		date: published,
+		media: mediaUrls || undefined,
+		child,
+	};
+}
 
 export async function parseTwitterFeed(
 	data: string,
@@ -68,24 +151,7 @@ export async function parseTwitterFeed(
 		};
 
 		const tweets: Tweet[] = feed.entries
-			.map((tweet) => {
-				const author = tweet.author?.name ?? tweet["dc:creator"]?.[0];
-				if (!author) return null;
-
-				const isRetweet = author !== partialProfile.username;
-				const published = tweet.published ?? tweet.updated ??
-					new Date(1984, 3, 4);
-				const content = tweet.description?.value ?? tweet.title?.value ?? "";
-
-				return {
-					retweet: isRetweet ? { author } : undefined,
-					id: String(tweet.id),
-					author: partialProfile.username,
-					content: normalize(content),
-					date: published,
-					media: extractMediaUrls(content) || undefined,
-				};
-			})
+			.map((entry) => parseTweetEntry(partialProfile, entry))
 			.filter((tweet) => tweet !== null);
 
 		return { partialProfile, tweets };

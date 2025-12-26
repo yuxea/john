@@ -432,7 +432,7 @@ function Popup() {
 						disabled={isSaving}
 						onClick={handleSaveSettings}
 					>
-						{isSaving ? "Saving..." : "Save Settings"}
+						{isSaving ? "Saving..." : "Save settings"}
 					</button>
 				</div>
 			</main>
