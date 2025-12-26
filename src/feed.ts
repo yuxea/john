@@ -4,7 +4,7 @@
  */
 
 import { FeedEntry, parseFeed } from "@mikaelporttila/rss";
-import { DOMParser, Element } from "@b-fuze/deno-dom";
+import { DOMParser, Element } from "@b-fuze/deno-dom/wasm-legacy";
 import { Tweet, TwitterPartialProfile } from "./types.ts";
 import {
 	extractIdentifiersFromPartialUser,

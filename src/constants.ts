@@ -9,5 +9,5 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
 	enabled: true,
 	nitterInstance: "https://nitter.stay.rip",
 	twitterUsers: [],
-	refreshInterval: 30,
+	refreshInterval: 10,
 };

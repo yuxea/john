@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { DOMParser, Element } from "@b-fuze/deno-dom";
+import { DOMParser, Element } from "@b-fuze/deno-dom/wasm-legacy";
 import { TwitterProfile } from "./types.ts";
 
 const parseNumber = (input: string | undefined): number =>

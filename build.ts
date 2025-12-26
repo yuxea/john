@@ -27,7 +27,7 @@ interface BrowserManifests {
 const browsers: BrowserManifests = {
 	chrome: {
 		isChromium: true,
-		omits: ["browser_action"],
+		omits: ["browser_action", "browser_specific_settings"],
 		overrides: {
 			background: {
 				service_worker: "worker.js",
@@ -39,6 +39,7 @@ const browsers: BrowserManifests = {
 			manifest_version: 2,
 			background: {
 				scripts: ["background.js"],
+				type: "module",
 			},
 		},
 		omits: ["action"],
@@ -63,6 +64,8 @@ async function build() {
 		{ input: "src/popup.tsx", output: "popup.js" },
 	];
 
+	await emptyDir(outDir);
+
 	if (browser.isChromium) {
 		Deno.writeTextFileSync(
 			`${outDir}/worker.js`,
@@ -80,18 +83,21 @@ async function build() {
 	});
 
 	for (const entry of entrypoints) {
-		await Deno.bundle({
-			entrypoints: [entry.input],
-			outputPath: join(outDir, entry.output),
-			minify: !flags.dev,
-			sourcemap: flags.dev ? "inline" : "linked",
-			format: "iife",
-			platform: "browser",
-			write: true,
-			external: [
-				"webextension-polyfill",
-			],
-		});
+		console.log(
+			entry.input,
+			await Deno.bundle({
+				entrypoints: [entry.input],
+				outputPath: join(outDir, entry.output),
+				minify: !flags.dev,
+				sourcemap: flags.dev ? "inline" : "linked",
+				format: "esm",
+				platform: "browser",
+				write: true,
+				external: [
+					"webextension-polyfill",
+				],
+			}),
+		);
 	}
 
 	Deno.writeTextFileSync(
