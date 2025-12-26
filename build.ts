@@ -7,9 +7,52 @@
 import { copy } from "@std/fs/copy";
 import { emptyDir } from "@std/fs/empty-dir";
 import { join } from "@std/path";
+import { parseArgs } from "@std/cli/parse-args";
 
 const outDir = "./dist";
-const isDev = Deno.args.includes("--dev");
+
+const flags = parseArgs(Deno.args, {
+	boolean: ["dev", "firefox", "chrome"],
+	default: { dev: false, firefox: false, chrome: true },
+});
+
+interface BrowserManifests {
+	[id: string]: {
+		omits: string[];
+		isChromium?: true;
+		overrides?: { [id: string]: any };
+	};
+}
+
+const browsers: BrowserManifests = {
+	chrome: {
+		isChromium: true,
+		omits: ["browser_action"],
+		overrides: {
+			background: {
+				service_worker: "worker.js",
+			},
+		},
+	},
+	firefox: {
+		overrides: {
+			manifest_version: 2,
+			background: {
+				scripts: ["background.js"],
+			},
+		},
+		omits: ["action"],
+	},
+};
+
+const browser = flags.firefox ? browsers.firefox : browsers.chrome;
+
+const manifest = JSON.parse(Deno.readTextFileSync("manifest.json"));
+
+browser.omits.forEach((omit) => delete manifest[omit]);
+Object.entries(browser.overrides ?? {}).forEach(([key, value]) =>
+	manifest[key] = value
+);
 
 async function build() {
 	console.log("🍅🧹"), await emptyDir(outDir);
@@ -20,11 +63,18 @@ async function build() {
 		{ input: "src/popup.tsx", output: "popup.js" },
 	];
 
+	if (browser.isChromium) {
+		Deno.writeTextFileSync(
+			`${outDir}/worker.js`,
+			"importScripts('browser-polyfill.js');importScripts('background.js')",
+		);
+	}
+
 	await Deno.bundle({
 		entrypoints: ["npm:webextension-polyfill"],
 		outputPath: join(outDir, "browser-polyfill.js"),
-		minify: !isDev,
-		format: "esm",
+		minify: !flags.dev,
+		format: "iife",
 		platform: "browser",
 		write: true,
 	});
@@ -33,9 +83,9 @@ async function build() {
 		await Deno.bundle({
 			entrypoints: [entry.input],
 			outputPath: join(outDir, entry.output),
-			minify: !isDev,
-			sourcemap: isDev ? "inline" : "linked",
-			format: "esm",
+			minify: !flags.dev,
+			sourcemap: flags.dev ? "inline" : "linked",
+			format: "iife",
 			platform: "browser",
 			write: true,
 			external: [
@@ -44,7 +94,11 @@ async function build() {
 		});
 	}
 
-	await Deno.copyFile("manifest.json", `${outDir}/manifest.json`);
+	Deno.writeTextFileSync(
+		`${outDir}/manifest.json`,
+		JSON.stringify(manifest, null, 4),
+	);
+	await copy("static", `${outDir}/`, { overwrite: true });
 	await copy("assets", `${outDir}/assets`, { overwrite: true });
 }
 

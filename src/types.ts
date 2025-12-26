@@ -3,6 +3,13 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+export interface ExtensionSettings {
+	enabled: boolean;
+	nitterInstance: string;
+	twitterUsers: string[];
+	refreshInterval: number;
+}
+
 export interface TwitterPartialProfile {
 	username: string;
 	displayName: string;

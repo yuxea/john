@@ -9,14 +9,14 @@
 	"permissions": [
 		"storage"
 	],
-	"optional_host_permissions": [
-		"*://*/*"
-	],
 	"content_scripts": [
 		{
 			"matches": [
-				"*://(b|witch)sky.app/*",
-				"*://(catsky|deer).social/*",
+				"*://bsky.app/*",
+				"*://bitchsky.app/*",
+				"*://witchsky.app/*",
+				"*://catsky.social/*",
+				"*://deer.social/*",
 				"*://blacksky.community/*"
 			],
 			"js": ["browser-polyfill.js", "content.js"],
@@ -24,14 +24,18 @@
 		}
 	],
 	"background": {
-		"service_worker": "background.js",
-		"type": "module"
+		"scripts": ["browser-polyfill.js", "background.js"]
 	},
 	"action": {
 		"default_popup": "popup.html",
+		"default_title": "john",
 		"default_icon": {
-			"48": "assets/john-48.png"
+			"48": "assets/john.png"
 		}
+	},
+	"browser_action": {
+		"default_icon": "assets/john.png",
+		"default_popup": "popup.html"
 	},
 	"browser_specific_settings": {
 		"gecko": {
