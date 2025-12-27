@@ -1,10 +1,10 @@
 {
 	"manifest_version": 3,
-	"name": "john",
+	"name": "bridget",
 	"version": "0.1.0",
 	"description": "A browser extension that bridges your Twitter timeline to Bluesky",
 	"icons": {
-		"48": "assets/john-48.png"
+		"48": "assets/bridget-48.png"
 	},
 	"permissions": [
 		"storage"
@@ -28,18 +28,18 @@
 	},
 	"action": {
 		"default_popup": "popup.html",
-		"default_title": "john",
+		"default_title": "bridget",
 		"default_icon": {
-			"48": "assets/john.png"
+			"48": "assets/bridget.png"
 		}
 	},
 	"browser_action": {
-		"default_icon": "assets/john.png",
+		"default_icon": "assets/bridget.png",
 		"default_popup": "popup.html"
 	},
 	"browser_specific_settings": {
 		"gecko": {
-			"id": "@johnsky"
+			"id": "@bridgetsky"
 		}
 	}
 }

@@ -5,7 +5,7 @@
 
 import { interceptWebpackModuleSystem, WebpackRequire } from "./webpack.ts";
 
-console.log("[john] patcher script loaded");
+console.log("[bridget] patcher script loaded");
 
 export interface PatchReplace {
 	match: string | RegExp;
@@ -80,9 +80,9 @@ function patch(
 			if (!patch.query) continue;
 
 			if (patch.done) {
-				console.warn(`[john] ${ext.name} is patching ${patch.query} again`);
+				console.warn(`[bridget] ${ext.name} is patching ${patch.query} again`);
 			} else {
-				console.trace("[john] initializing ext", ext.name);
+				console.trace("[bridget] initializing ext", ext.name);
 			}
 			patch.done = true, patchedBy.push(ext.name);
 
@@ -90,7 +90,7 @@ function patch(
 				const before = code;
 				code = repl(code, inner.match, inner.replace);
 				if (code === before) {
-					console.warn(`[john] ${ext.name} failed to patch ${inner.match}`);
+					console.warn(`[bridget] ${ext.name} failed to patch ${inner.match}`);
 				}
 			}
 		}
@@ -114,8 +114,8 @@ function patchFactories(factories: WebpackRequire["m"]) {
 
 interceptWebpackModuleSystem({
 	ready(factories) {
-		console.log(
-			"[john] webpack factories loaded",
+		console.trace(
+			"[bridget] webpack factories loaded",
 			Object.keys(factories).length,
 		);
 		patchFactories(factories);

@@ -293,7 +293,7 @@ function Popup() {
 	return (
 		<div className="popup-container">
 			<header className="popup-header">
-				<h1>john</h1>
+				<h1>bridget</h1>
 				<p>bridge your twitter content to bluesky</p>
 			</header>
 
@@ -310,7 +310,7 @@ function Popup() {
 								})}
 						/>
 						<span className="checkmark"></span>
-						Enable john
+						Enable Twitter bridge
 					</label>
 				</SettingGroup>
 

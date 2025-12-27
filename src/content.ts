@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-console.log("[john] content script loaded");
+console.log("[bridget] content script loaded");
 
 const script = document.createElement("script");
 script.src = browser.runtime.getURL("patches.js");

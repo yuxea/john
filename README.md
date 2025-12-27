@@ -1,4 +1,4 @@
-# john
+# bridget
 
 A browser extension that bridges your Twitter timeline to Bluesky
 
@@ -11,7 +11,3 @@ A browser extension that bridges your Twitter timeline to Bluesky
 
 it follows rss feeds from arbitrary nitter instances and uses nitter apis to let
 you view twitter content on bluesky
-
-### why “john”
-
-![](readme/context.png)

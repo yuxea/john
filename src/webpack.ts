@@ -43,7 +43,7 @@ export interface WebpackModuleSystem {
 export let wreq: WebpackRequire;
 
 function extractPrivateCache(wreq: (_: symbol) => void) {
-	const sym = Symbol("john.extract");
+	const sym = Symbol("bridget.extract");
 	let cache: any;
 
 	Object.defineProperty(Object.prototype, sym, {
@@ -95,7 +95,7 @@ export function interceptWebpackModuleSystem(
 	Object.defineProperty(Function.prototype, "m", {
 		configurable: true,
 		set(value) {
-			console.trace("[john] hi webpack");
+			console.trace("[bridget] hi webpack");
 
 			// @ts-expect-error meow
 			delete Function.prototype.m;
@@ -116,14 +116,14 @@ export function interceptWebpackModuleSystem(
 					const res = push.apply(chunk, [items]);
 					if (!push.__patched) {
 						console.trace(
-							"[john] injecting webpack modules",
+							"[bridget] injecting webpack modules",
 							(items as any)[1],
 						);
 						(items as any)[1] && chunkLoad((items as any)[1]);
 					}
 					return res;
 				} catch (err) {
-					console.error("[john] failed to inject webpack modules", err);
+					console.error("[bridget] failed to inject webpack modules", err);
 					return 0;
 				}
 			};
@@ -186,13 +186,13 @@ export function search(
 	}
 
 	if (results.length > 1) {
-		console.warn("[john] multiple results for query:", query);
+		console.warn("[bridget] multiple results for query", query);
 		return results;
 	}
 	if (results.length === 1) {
 		return results[0];
 	}
-	return console.warn("[john] no match for query:", query), null;
+	return console.warn("[bridget] no match for query", query), null;
 }
 
 const webpack = {
